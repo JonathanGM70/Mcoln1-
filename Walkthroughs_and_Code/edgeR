@@ -1,0 +1,93 @@
+The following link is the bioconductor page on the edgeR differential gene expression package:
+https://bioconductor.org/packages/release/bioc/html/edgeR.html
+
+The followind R scripts were used to determine differential gene expression in the control Light/Dark and KO Mcoln1 Light/Dark groups:
+### Clears R's brain of datasets
+rm(list = ls())
+
+### Installs all needed packages
+library(edgeR)
+library(dplyr)
+library(AnnotationDbi)
+library(org.Mm.eg.db)
+
+### Reads in the featureCounts file we will be using edgeR on, and sets the EnsembleID as the rownames
+rawdata <- read.csv("/Volumes/USB FLASH 1/Graduate Research/Data Files/Mcoln1 -/Code/Mcoln1-/EdgeR/All_Groups/WT_L-D/FeatureCounts_WT_L-D.csv", row.names = "EnsembleID")
+
+### Creates a factor that contains two groups: 0 and 1 for the two treatments being tested
+group <- factor(c('0','0','0','0','0','1','1','1','1'))
+
+### Creates an DGE object based on our raw count data with each treatment being assigned to a different group
+dgeGlm <- DGEList(counts = rawdata, group = group)
+
+### Gets rid of rows that have less than 4 entries and adds it to a new object 
+keep <- rowSums(cpm(dgeGlm)>2) >= 4
+
+ddgeGlm <- dgeGlm[keep,]
+
+### Shows how many entries are in each of the samples
+dgeGlm[["samples"]]
+
+### Creates a model for edgeR to analyze based on the two groups previously assigned
+design <- model.matrix(~group)
+
+### This code block analyzes binomial dispersion in data and trends in dispersion for BCV and volcano plots
+dgeGlmComDisp <- estimateGLMCommonDisp(dgeGlm, design, verbose = TRUE)
+dgeGlmTrendDisp <- estimateGLMTrendedDisp(dgeGlmComDisp, design)
+dgeGlmTagDisp <- estimateGLMTagwiseDisp(dgeGlmTrendDisp, design)
+
+### Creates a BCV plot on the data
+plotBCV(dgeGlmTagDisp)
+
+### Creates an MDS plot on samples in the data
+MDS <- calcNormFactors(dgeGlm)
+plotMDS(MDS)
+
+### Performs a GLM fit with the dgeGlmTagDisp object
+fit <- glmFit(dgeGlmTagDisp, design)
+
+### This shows the number of groups being tested, with the intercept being the WT group being used as a reference
+colnames(coef(fit))
+
+### This code block analyzes for differentially expressed genes, while being able to set Pvalue/FDR values...
+### ...in a table called hits1. The write.csv function creates the DEGs file output in your Working Directory 
+lrt1 <- glmLRT(fit, coef = 2)
+ttGlm1 <- topTags(lrt1, n = Inf)
+class(ttGlm1)
+summary(deGlm1 <- decideTestsDGE(lrt1, p = 0.05, adjust = 'fdr'))
+tagsGlm1 <- rownames(dgeGlmTagDisp)[as.logical(deGlm1)]
+hits1 <- ttGlm1$table[ttGlm1$table$FDR < 0.1,]
+write.csv(hits1, "EdgeR_WT_L-D_Vs_KO_L-D.csv")
+
+### Shows what dataypes are available in the mouse database/package
+columns(org.Mm.eg.db)
+
+### Creates a dataframe from the ttGlm1 matrix 
+ttGlm_KO_LD <- as.data.frame(ttGlm1)
+
+### Adds a new column called "symbol" that adds the gene symbol to each EnsembleID
+ttGlm_KO_LD$symbol = mapIds(org.Mm.eg.db,
+                               keys = row.names(ttGlm_KO_LD),
+                               column = "SYMBOL",
+                               keytype = "ENSEMBL",
+                               multiVals = "first")
+
+### Loads the volcano plot package
+library(EnhancedVolcano)
+
+### Creates the DEGs volcano plot, it also contains several variables that can be adjusted for visual effect
+EnhancedVolcano(ttGlm_KO_LD, lab = ttGlm_KO_LD$symbol, x = 'logFC', y = 'PValue',
+                title = 'Control Light/Dark Vs KO Light/Dark', colAlpha = 1, pointSize = 2,
+                labSize = 5, col = c('grey','grey','grey','blue'),
+                drawConnectors = TRUE, boxedLabels = TRUE, legendLabSize = 12,
+                legendLabels = c('NA','NA','Not Significant','DEGs'), subtitle = 'Differentially Expressed Genes',
+                pCutoff = 0.05, gridlines.minor = FALSE, captionLabSize = 0)
+
+
+
+
+
+
+
+
+
