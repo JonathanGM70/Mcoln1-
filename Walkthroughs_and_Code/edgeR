@@ -46,7 +46,7 @@ plotMDS(MDS)
 ### Performs a GLM fit with the dgeGlmTagDisp object
 fit <- glmFit(dgeGlmTagDisp, design)
 
-### This shows the number of groups being tested, with the intercept being the WT group being used as a reference
+### This shows the number of groups being tested, with the intercept being the control group being used as a reference
 colnames(coef(fit))
 
 ### This code block analyzes for differentially expressed genes, while being able to set Pvalue/FDR values...
