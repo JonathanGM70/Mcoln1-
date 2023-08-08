@@ -22,4 +22,4 @@
 
 Walkthroughs and code used for all of the quality assessment and data analysis steps are available in each of the below links.
 
-1. [Quality assessment with FastQC]([https://github.com/JonathanGM70/Mcoln1-/blob/main/Walkthroughs_and_Code/FastQC)https://github.com/JonathanGM70/Mcoln1-/blob/main/Walkthroughs_and_Code/FastQC])
+1. [Quality assessment with FastQC]([https://github.com/JonathanGM70/Mcoln1-/blob/main/Walkthroughs_and_Code/FastQC)
