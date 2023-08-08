@@ -6,7 +6,7 @@
 
 ## Data Availability
 ##### Data is available in NCBI SRA under the accession number 
-###PRJNA1002601
+### PRJNA1002601
 
 
 ## Software Used
